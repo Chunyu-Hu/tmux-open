@@ -7,6 +7,9 @@ source "$CURRENT_DIR/scripts/helpers.sh"
 default_open_key="o"
 open_option="@open"
 
+open_qute_option="@open-qute"
+default_open_qute_key="O"
+
 default_open_editor_key="C-o"
 open_editor_option="@open-editor"
 open_editor_override="@open-editor-command"
@@ -55,6 +58,8 @@ generate_open_command() {
 		echo "$(command_generator "open")"
 	elif is_cygwin; then
 		echo "$(command_generator "cygstart")"
+	elif command_exists "qutebrowser" && [ "$1" = "qutebrowser" ]; then
+		echo "$(command_generator "qutebrowser")"
 	elif command_exists "xdg-open"; then
 		echo "$(command_generator "xdg-open")"
 	else
@@ -70,7 +75,7 @@ generate_open_search_command() {
 	elif is_cygwin; then
 		echo "$(command_generator "cygstart")"
 	elif command_exists "xdg-open"; then
-		echo "$(search_command_generator "xdg-open" "$engine")"
+		echo "$(search_command_generator "qutebrowser" "$engine")"
 	else
 		# error command for Linux machines when 'xdg-open' not installed
 		"$CURRENT_DIR/scripts/tmux_open_error_message.sh" "xdg-open"
@@ -90,6 +95,21 @@ generate_editor_command() {
 set_copy_mode_open_bindings() {
 	local open_command="$(generate_open_command)"
 	local key_bindings=$(get_tmux_option "$open_option" "$default_open_key")
+	local key
+	for key in $key_bindings; do
+		if tmux-is-at-least 2.4; then
+			tmux bind-key -T copy-mode-vi "$key" send-keys -X copy-pipe-and-cancel "$open_command"
+			tmux bind-key -T copy-mode    "$key" send-keys -X copy-pipe-and-cancel "$open_command"
+		else
+			tmux bind-key -t vi-copy    "$key" copy-pipe "$open_command"
+			tmux bind-key -t emacs-copy "$key" copy-pipe "$open_command"
+		fi
+	done
+}
+
+set_copy_mode_open_qute_bindings() {
+	local open_command="$(generate_open_command qutebrowser)"
+	local key_bindings=$(get_tmux_option "$open_qute_option" "$default_open_qute_key")
 	local key
 	for key in $key_bindings; do
 		if tmux-is-at-least 2.4; then
@@ -141,6 +161,7 @@ main() {
 	set_copy_mode_open_bindings
 	set_copy_mode_open_editor_bindings
 	set_copy_mode_open_search_bindings
+	set_copy_mode_open_qute_bindings
 }
 
 main
