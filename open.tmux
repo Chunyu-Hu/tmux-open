@@ -60,8 +60,8 @@ generate_open_command() {
 		echo "$(command_generator "cygstart")"
 	elif command_exists "qutebrowser" && [ "$1" = "qutebrowser" ]; then
 		echo "$(command_generator "qutebrowser")"
-	elif command_exists "xdg-open"; then
-		echo "$(command_generator "xdg-open")"
+	elif command_exists "xdg-open.1"; then
+		echo "$(command_generator "xdg-open.1")"
 	else
 		# error command for Linux machines when 'xdg-open' not installed
 		"$CURRENT_DIR/scripts/tmux_open_error_message.sh" "xdg-open"
@@ -74,7 +74,7 @@ generate_open_search_command() {
 		echo "$(search_command_generator "open" "$engine")"
 	elif is_cygwin; then
 		echo "$(command_generator "cygstart")"
-	elif command_exists "xdg-open"; then
+	elif command_exists "xdg-open.1"; then
 		echo "$(search_command_generator "qutebrowser" "$engine")"
 	else
 		# error command for Linux machines when 'xdg-open' not installed
@@ -104,6 +104,26 @@ set_copy_mode_open_bindings() {
 			tmux bind-key -t vi-copy    "$key" copy-pipe "$open_command"
 			tmux bind-key -t emacs-copy "$key" copy-pipe "$open_command"
 		fi
+	done
+}
+
+set_copy_mode_open_programme_bindings() {
+	local stored_programme_vars="$(stored_programme_vars)"
+	local programme_var
+	local programme_and_params
+	local key
+
+	for programme_var in $stored_programme_vars; do
+		programme_and_params="$(get_programme "$programme_var")"
+
+		if tmux-is-at-least 2.4; then
+			tmux bind-key -T copy-mode-vi "$programme_var" send-keys -X copy-pipe-and-cancel "$programme_and_params"
+			tmux bind-key -T copy-mode    "$programme_var" send-keys -X copy-pipe-and-cancel "$programme_and_params"
+		else
+			tmux bind-key -t vi-copy    "$programme_var" copy-pipe "$programme_and_params"
+			tmux bind-key -t emacs-copy "$programme_var" copy-pipe "$programme_and_params"
+		fi
+
 	done
 }
 
@@ -162,6 +182,7 @@ main() {
 	set_copy_mode_open_editor_bindings
 	set_copy_mode_open_search_bindings
 	set_copy_mode_open_qute_bindings
+	set_copy_mode_open_programme_bindings
 }
 
 main

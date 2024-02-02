@@ -48,6 +48,19 @@ get_engine() {
 	tmux show-options -g | grep -i "^@open-$engine_var" | cut -d ' ' -f2 | xargs
 }
 
+get_programme() {
+	local programme_var="$1"
+	tmux show-options -g | grep -i "^@open_programme-$programme_var" | cut -d ' ' -f2 | xargs
+}
+
+stored_programme_vars() {
+	tmux show-options -g |
+		grep -i "^@open_programme-" |
+		cut -d '-' -f2 |
+		cut -d ' ' -f1 |
+		xargs
+}
+
 tmux_version="$(tmux -V | cut -d ' ' -f 2 | sed 's/next-//'))"
 tmux-is-at-least() {
 	if [[ $tmux_version == $1 ]]
