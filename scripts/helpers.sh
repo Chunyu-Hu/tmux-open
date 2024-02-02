@@ -50,14 +50,15 @@ get_engine() {
 
 get_programme() {
 	local programme_var="$1"
-	tmux show-options -g | grep -i "^@open_programme-$programme_var" | cut -d ' ' -f2 | xargs
+	tmux show-options -g | grep -i "^@open_programme-$programme_var" |
+		awk '{gsub($1" *",""); print $0}' |
+		xargs
 }
 
 stored_programme_vars() {
 	tmux show-options -g |
 		grep -i "^@open_programme-" |
-		cut -d '-' -f2 |
-		cut -d ' ' -f1 |
+		awk '{gsub("@open_programme-",""); print $1}' |
 		xargs
 }
 
