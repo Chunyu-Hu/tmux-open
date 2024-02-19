@@ -115,8 +115,14 @@ set_copy_mode_open_programme_bindings() {
 
 	for programme_var in $stored_programme_vars; do
 		programme_and_params="$(get_programme "$programme_var")"
+		#echo "$programme_var $programme_and_params" >> /root/logs
 
-		if tmux-is-at-least 2.4; then
+		if echo $programme_var | grep -iq 'c-'; then
+			tmux bind-key -T copy-mode-vi "$programme_var" send-keys -X copy-pipe-and-cancel "$programme_and_params"
+			tmux bind-key -T copy-mode    "$programme_var" send-keys -X copy-pipe-and-cancel "$programme_and_params"
+			echo "$(preserve_url_hash) | xargs -I {} tmux run-shell -b 'cd #{pane_current_path}; $programme_and_params \"{}\" > /root/logs 2>&1'"
+			#echo "$(preserve_url_hash) | xargs -I {} tmux run-shell -b 'cd #{pane_current_path}; $programme_and_params \"{}\" > /dev/null'"
+		elif tmux-is-at-least 2.4; then
 			tmux bind-key -T copy-mode-vi "$programme_var" send-keys -X copy-pipe-and-cancel "$programme_and_params"
 			tmux bind-key -T copy-mode    "$programme_var" send-keys -X copy-pipe-and-cancel "$programme_and_params"
 		else
